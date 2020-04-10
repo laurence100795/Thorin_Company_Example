@@ -1,7 +1,9 @@
 import os
-from flask import Flask, render_template
+import json
+from flask import Flask, render_template, request, flash
 
 app = Flask(__name__)
+app.secret_key = "some_secret"
 
 @app.route("/")
 def index():
@@ -9,10 +11,26 @@ def index():
 
 @app.route("/about")
 def about():
-    return render_template("about.html", page_title="About", list_of_numbers=[1, 2, 3])
+    data = []
+    with open("data/company.json", "r") as json_data:
+        data = json.load(json_data)
+    return render_template("about.html", page_title="About", list_of_numbers=[1, 2, 3], company=data)
 
-@app.route("/contact")
+@app.route("/about/<member_name>")
+def about_name(member_name):
+    member = {}
+
+    with open("data/company.json", "r") as json_data:
+        data = json.load(json_data)
+        for obj in data:
+            if obj["url"] == member_name:
+                member = obj
+    return render_template("member.html", member=member)
+
+@app.route("/contact", methods=["GET", "POST"])
 def contact():
+    if request.method == "POST":
+        flash("thanks {}, we have recevied your message".format(request.form["name"]))
     return render_template("contact.html", page_title="Contact")
 
 @app.route("/careers")
